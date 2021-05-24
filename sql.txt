@@ -1,0 +1,111 @@
+задача 1 SQL
+with tab1 as
+(
+Select distinct a.partner_rk
+	From msu_analytics.partner a
+left join msu_analytics.location b
+	on (a.partner_rk = b.partner_rk)
+left join msu_analytics.legend c
+	on (a.partner_rk=c.partner_rk)
+where (location_rk is null) and (legend_rk is not null)
+)
+
+select count(*) as cnt 
+from tab1
+--------------------------------------------
+with tab2 as
+
+(
+
+with tab1 as
+
+(
+
+select 
+
+a.partner_rk, c.time, d.gender_cd
+
+
+from msu_analytics.location a
+
+inner join msu_analytics.quest b
+
+on a.location_rk = b.location_rk
+
+inner join msu_analytics.game c
+
+on b.quest_rk = c.quest_rk
+
+inner join msu_analytics.employee d
+
+on c.employee_rk = d.employee_rk
+
+)
+
+select
+
+partner_rk, avg(time) as avg_time
+
+from tab1
+
+where gender_cd = 'f'
+
+group by 1 order by 2 limit 1
+
+)
+
+Select 
+
+w.partner_nm
+
+from tab2 q
+
+inner join msu_analytics.partner w
+
+on q.partner_rk = w.partner_rk
+------------------------------------------
+with 
+	Jun1 as
+(
+select 
+	quest_rk, CAST (count(*) AS FLOAT)
+	from msu_analytics.game 
+		where (game_dttm<= '2018-02-01 00:00:00') and (game_flg = 1)
+	group by 1 order by 1
+),
+	Jun as
+(
+select
+	quest_rk, CAST (count(*) AS FLOAT)
+	from msu_analytics.game 
+		where game_dttm<= '2018-02-01 00:00:00'
+	group by quest_rk order by 1
+),
+	Feb1 as
+(
+select 
+	quest_rk, CAST (count(*) AS FLOAT)
+	from msu_analytics.game 
+		where (game_dttm>= '2018-02-01 00:00:00') and (game_flg = 1)
+	group by 1 order by 1
+),
+	Feb as
+(
+select 
+	quest_rk, CAST(count(*) AS FLOAT)
+	from msu_analytics.game 
+		where game_dttm>= '2018-02-01 00:00:00'
+	group by quest_rk order by 1
+)
+Select e.quest_nm
+From Jun1 a
+	inner join Jun b 
+		on a.quest_rk = b.quest_rk
+	inner join Feb1 c
+		on a.quest_rk = c.quest_rk
+	inner join Feb d
+		on a.quest_rk = d.quest_rk
+	inner join msu_analytics.quest e
+		on a.quest_rk = e.quest_rk
+	Order by ABS((a.count / b.count) - (c.count / d.count)) desc
+	Limit 1
